@@ -38,8 +38,17 @@ jobs:
       - name: Install Buildozer
         run: pip install --upgrade pip buildozer==1.5.0 Cython==0.29.37
 
-      - name: Build debug APK
-        run: buildozer -v android debug
+            - name: Build debug APK
+        shell: bash
+        run: buildozer -v android debug 2>&1 | tee build.log
+
+      - name: Show error summary
+        if: failure()
+        run: |
+          n=$(grep -n "Command failed" build.log | head -1 | cut -d: -f1)
+          n=${n:-$(wc -l < build.log)}
+          start=$(( n > 60 ? n - 60 : 1 ))
+          sed -n "${start},${n}p" build.log
 
       - uses: actions/upload-artifact@v4
         with:
